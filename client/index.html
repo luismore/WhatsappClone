@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsAppClone</title>
+    <script type="module">
+
+
+        import { io } from 'https://cdn.socket.io/4.3.2/socket.io.esm.min.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
+        const socket = io();
+
+        let currentUser = null;
+
+        
+
+        const formDom = document.getElementById("form");
+        const siNoIniciasNoChateas = document.getElementById("siNoIniciasNoChateas");
+        const listaMensajes = document.getElementById("messages");
+
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVGOnQazBS40_H3h9e1bTqNlFqKVOfZNM",
+            authDomain: "whatsappclone-6f895.firebaseapp.com",
+            projectId: "whatsappclone-6f895",
+            storageBucket: "whatsappclone-6f895.firebasestorage.app",
+            messagingSenderId: "82341140006",
+            appId: "1:82341140006:web:00af4ccff35b7df4ee78e7",
+            measurementId: "G-EBRMGJV5E7"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        function handleGoogleSignIn() {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    currentUser = user;
+                })
+        }
+
+        function handleSignOut() {
+            signOut(auth)
+                .then(() => {
+                    console.log("Sesión cerrada.");
+                    currentUser = null;
+                })
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const authButton = document.getElementById("auth-btn");
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    authButton.textContent = "Sign Out";
+                    authButton.onclick = handleSignOut;
+                    formDom.style.display = "flex";
+                    siNoIniciasNoChateas.style.display = "none";
+                    currentUser = user;
+                } else {
+                    authButton.textContent = "Sign In";
+                    authButton.onclick = handleGoogleSignIn;
+                    listaMensajes.innerHTML = "";
+                    formDom.style.display = "none";
+                    siNoIniciasNoChateas.style.display = "block";
+                    currentUser = null;
+
+                }
+            });
+        });
+
+
+
+        formDom.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (input.value.trim()) {
+            socket.emit("chat message", input.value);
+            input.value = "";
+        }
+        });
+
+
+        socket.on("chat message", (msg) => {
+            const li = document.createElement("li");
+            li.textContent = currentUser.displayName + ": " + msg;
+            messages.appendChild(li);
+            messages.scrollTop = messages.scrollHeight;
+        });
+
+        if(user){
+            socket.on("user connected", (msg) => {
+                const li = document.createElement("li");
+                li.textContent = msg;
+                li.style.color = "gray"; 
+                li.style.fontStyle = "italic";
+                li.style.textAlign = "center";
+                messages.appendChild(li);
+                messages.scrollTop = messages.scrollHeight;
+            });
+        }
+
+
+
+    const input = document.getElementById("input");
+    const typingIndicator = document.getElementById("typing-indicator");
+    let typingTimeout;
+
+
+    input.addEventListener("input", () => {
+        if (currentUser) {
+            socket.emit("typing", currentUser.displayName);
+        }
+
+
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            socket.emit("stop typing");
+        }, 2000);
+    });
+
+
+    socket.on("user typing", (userName) => {
+        typingIndicator.textContent = `${userName} está escribiendo...`;
+        typingIndicator.style.display = "block";
+    });
+
+    socket.on("user stopped typing", () => {
+    typingIndicator.style.display = "none";
+    });
+
+
+
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        #auth-btn {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: 0.3s;
+        }
+
+        #auth-btn:hover {
+            background-color: #1ebe5d;
+        }
+
+        #chat {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            max-width: 100%;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #messages {
+            list-style-type: none;
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        #messages li {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+
+        #messages li:nth-child(odd) {
+            background: #dcf8c6;
+            align-self: flex-start;
+        }
+
+        #messages li:nth-child(even) {
+            background: #e5e5ea;
+            align-self: flex-end;
+        }
+
+        #form {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            background: #fff;
+        }
+
+        #input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            outline: none;
+        }
+
+        #form button {
+            background: #128C7E;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin-left: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #form button:hover {
+            background: #0f7a6d;
+        }
+
+        #siNoIniciasNoChateas {
+            display: none;
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>WhatsAppClone</h1>
+    <p>Chat with your friends!</p>
+
+    <button id="auth-btn">Sign In</button>
+
+    <h3 id="siNoIniciasNoChateas">Inicia Sesion para empezar a chatear!</h3>
+
+    <section id="chat">
+
+        <ul id="messages"></ul>
+
+        <p id="typing-indicator" style="font-style: italic; color: gray; display: none;"></p>
+
+        <form id="form">
+
+            <input id="input" type="text" name="message" placeholder="Type a message">
+
+            <button type="submit">Send</button>
+
+        </form>
+    </section>
+</body>
+</html>
