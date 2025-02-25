@@ -9,10 +9,13 @@ const server = createServer(app);
 const __dirname = process.cwd();
 const io = new Server(server);
 
+
+let user =
+
 io.on('connection', (socket) => {
     console.log('a user connected');
 
-    io.emit('user connected', 'Un nuevo usuario se ha conectado');
+    io.emit('user connected', `Un nuevo usuario se ha conectado`);
     
     socket.on('disconnect', () => {
         console.log('a user disconnected');
@@ -29,6 +32,7 @@ io.on('connection', (socket) => {
     socket.on('stop typing', () => {
         socket.broadcast.emit('user stopped typing');
     });
+
 });
 
 app.use(logger('dev'));

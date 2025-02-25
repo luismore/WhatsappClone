@@ -15,8 +15,7 @@
 
         let currentUser = null;
 
-        
-
+        const input = document.getElementById("input");
         const formDom = document.getElementById("form");
         const siNoIniciasNoChateas = document.getElementById("siNoIniciasNoChateas");
         const listaMensajes = document.getElementById("messages");
@@ -42,6 +41,7 @@
                 .then((result) => {
                     const user = result.user;
                     currentUser = user;
+
                 })
         }
 
@@ -85,6 +85,16 @@
         }
         });
 
+        const sendButton = document.getElementById("send-btn");
+
+        sendButton.addEventListener("click", () => {
+            if (input.value.trim()) {
+                socket.emit("chat message", input.value);
+                input.value = "";
+            }
+        });
+
+
 
         socket.on("chat message", (msg) => {
             const li = document.createElement("li");
@@ -93,7 +103,7 @@
             messages.scrollTop = messages.scrollHeight;
         });
 
-        if(user){
+
             socket.on("user connected", (msg) => {
                 const li = document.createElement("li");
                 li.textContent = msg;
@@ -102,12 +112,13 @@
                 li.style.textAlign = "center";
                 messages.appendChild(li);
                 messages.scrollTop = messages.scrollHeight;
+
+
             });
-        }
+        
 
 
 
-    const input = document.getElementById("input");
     const typingIndicator = document.getElementById("typing-indicator");
     let typingTimeout;
 
@@ -133,6 +144,9 @@
     socket.on("user stopped typing", () => {
     typingIndicator.style.display = "none";
     });
+
+
+
 
 
 
@@ -206,16 +220,10 @@
             max-width: 80%;
         }
 
-        #messages li:nth-child(odd) {
+        #messages li{
             background: #dcf8c6;
             align-self: flex-start;
         }
-
-        #messages li:nth-child(even) {
-            background: #e5e5ea;
-            align-self: flex-end;
-        }
-
         #form {
             display: flex;
             padding: 10px;
@@ -271,7 +279,11 @@
 
             <input id="input" type="text" name="message" placeholder="Type a message">
 
-            <button type="submit">Send</button>
+            <input type="file" id="file-input" style="display: none;">
+
+            <button type="button" id="send-btn">Send</button>
+
+
 
         </form>
     </section>
